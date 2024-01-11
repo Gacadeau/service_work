@@ -1,5 +1,3 @@
-
-
 // pages/index.js
 import { useEffect, useState } from 'react';
 import VideoPlayer from './components/VideoPlayer';
