@@ -25,9 +25,13 @@ const Home = () => {
     };
   }, []);
 
-  const videoUrl = '/dance.mp4';
+  const videoUrls = [
+    '/dance.mp4',
+    '/one.mp4',
+    '/two.mp4',
+  ];
 
-  const handleDownloadClick = async () => {
+  const handleDownloadClick = async (videoUrl) => {
     try {
       const registration = await navigator.serviceWorker.ready;
       const response = await fetch(videoUrl);
@@ -51,13 +55,18 @@ const Home = () => {
     }
   }, [isOnline, router]);
 
-  return (
-    <div className="container mx-auto mt-8 text-center">
+  return  (
+    <div className="container mx-auto mt-8 text-center flex ">
       {isOnline ? (
         <div>
           <h1 className="text-3xl font-bold mb-4">Bienvenue sur la page daccueil</h1>
-          <VideoPlayer videoUrl={videoUrl} />
-          <VideoDownloadButton videoUrl={videoUrl} onClick={handleDownloadClick} />
+          {videoUrls.map((url, index) => (
+            <div key={index} className="mb-8 mr-4">
+              <h2 className="text-xl font-semibold mb-2">Vidéo {index + 1}</h2>
+              <VideoPlayer videoUrl={url} />
+              <VideoDownloadButton videoUrl={url} onClick={() => handleDownloadClick(url)} />
+            </div>
+          ))}
         </div>
       ) : (
         <CachedVideos />
