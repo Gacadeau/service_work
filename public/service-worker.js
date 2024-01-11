@@ -1,39 +1,45 @@
-const installEvent = () => {
-  self.addEventListener('install', () => {
-    console.log('service worker installed');
-  });
-};
-installEvent();
-
-const activateEvent = () => {
-  self.addEventListener('activate', () => {
-    console.log('service worker activated');
-  });
-};
-activateEvent();
+// service-worker.js
 
 const cacheName = 'v2';
 
 const cacheClone = async (e) => {
-  const res = await fetch(e.request);
-  const resClone = res.clone();
+  try {
+    const res = await fetch(e.request);
+    const resClone = res.clone();
 
-  const cache = await caches.open(cacheName);
-  await cache.put(e.request, resClone);
-  return res;
+    const cache = await caches.open(cacheName);
+    await cache.put(e.request, resClone);
+    return res;
+  } catch (error) {
+    console.error('Cache clone error:', error);
+    return caches.match(e.request);
+  }
 };
 
-const fetchEvent = () => {
-  self.addEventListener('fetch', (e) => {
-    e.respondWith(
-      cacheClone(e)
-        .catch(() => caches.match(e.request))
-        .then((res) => res)
+self.addEventListener('install', (event) => {
+  console.log('Service worker installed');
+  event.waitUntil(self.skipWaiting());
+});
+
+self.addEventListener('activate', (event) => {
+  console.log('Service worker activated');
+  event.waitUntil(self.clients.claim());
+});
+
+self.addEventListener('fetch', (event) => {
+  if (event.request.url.endsWith('.mp4')) {
+    event.respondWith(
+      caches.match(event.request).then((response) => {
+        return response || fetch(event.request).then((fetchedResponse) => {
+          console.log(`Video fetched: ${event.request.url}`);
+          return fetchedResponse;
+        });
+      })
     );
-  });
-};
-
-fetchEvent();
+  } else {
+    event.respondWith(cacheClone(event));
+  }
+});
 
 self.addEventListener('message', (event) => {
   console.log('Message received:', event.data);
@@ -47,18 +53,4 @@ self.addEventListener('message', (event) => {
     });
   }
 });
-
-self.addEventListener('fetch', (event) => {
-  if (event.request.url.endsWith('.mp4')) {
-    event.respondWith(
-      caches.match(event.request).then((response) => {
-        return response || fetch(event.request).then((fetchedResponse) => {
-          console.log(`Video fetched: ${event.request.url}`);
-          return fetchedResponse;
-        });
-      })
-    );
-  }
-});
-
 
